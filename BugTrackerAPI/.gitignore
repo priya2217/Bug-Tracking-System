@@ -1,0 +1,37 @@
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.pdb
+*.dbmdl
+
+# Rider IDE
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Node / React (if any frontend)
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Secrets
+appsettings.json
+secrets.json
+*.key
+*.pem
+
+# Logs
+*.log
+
+# Packages
+*.nupkg
+*.zip
