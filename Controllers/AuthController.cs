@@ -15,13 +15,12 @@ namespace BugTrackerAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        private const string JwtKey = "THIS_IS_MY_SUPER_SECRET_KEY_FOR_BUG_TRACKER_2026";
-        private const string JwtIssuer = "BugTrackerAPI";
-
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         // REGISTER
@@ -71,6 +70,7 @@ namespace BugTrackerAPI.Controllers
             });
         }
 
+        // JWT GENERATOR
         private string GenerateJwtToken(User user)
         {
             var claims = new[]
@@ -80,12 +80,12 @@ namespace BugTrackerAPI.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: JwtIssuer,
-                audience: JwtIssuer,
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
