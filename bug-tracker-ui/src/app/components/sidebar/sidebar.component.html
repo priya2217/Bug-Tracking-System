@@ -1,0 +1,44 @@
+<div class="h-full bg-white border-r p-4 flex flex-col">
+  <div class="flex items-center justify-between mb-6">
+    <div class="font-bold text-lg">🐛 Bug Tracker</div>
+    <button (click)="onToggle()" class="px-2 py-1 border rounded">
+      {{ collapsed ? "→" : "←" }}
+    </button>
+  </div>
+
+  <nav class="flex-1 space-y-2">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      class="block px-2 py-2 rounded hover:bg-gray-100"
+      >Dashboard</a
+    >
+    <a
+      routerLink="/bugs"
+      routerLinkActive="active"
+      class="block px-2 py-2 rounded hover:bg-gray-100"
+      >Bugs</a
+    >
+    <a
+      routerLink="/projects"
+      routerLinkActive="active"
+      class="block px-2 py-2 rounded hover:bg-gray-100"
+      >Projects</a
+    >
+    <a
+      routerLink="/profile"
+      routerLinkActive="active"
+      class="block px-2 py-2 rounded hover:bg-gray-100"
+      >Profile</a
+    >
+  </nav>
+
+  <div class="mt-4">
+    <button
+      (click)="logout()"
+      class="w-full text-left text-red-600 px-2 py-2 rounded hover:bg-gray-100"
+    >
+      Logout
+    </button>
+  </div>
+</div>

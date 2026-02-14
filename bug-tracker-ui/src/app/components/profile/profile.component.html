@@ -1,0 +1,80 @@
+<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow">
+  <div class="flex items-center gap-4 mb-6">
+    <div
+      class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+    >
+      {{ username ? username.charAt(0) || "U" : "U" }}
+    </div>
+    <div>
+      <h2 class="text-2xl font-bold">{{ username || "User" }}</h2>
+      <p class="text-sm text-gray-600">Profile details</p>
+    </div>
+  </div>
+
+  <form *ngIf="!editMode" class="space-y-4">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700">Username</label>
+      <div class="mt-1 text-gray-800">{{ username }}</div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-700">Email</label>
+      <div class="mt-1 text-gray-800">{{ email }}</div>
+    </div>
+
+    <div class="flex gap-3 pt-4">
+      <button
+        type="button"
+        (click)="enableEdit()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded"
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        (click)="logout()"
+        class="bg-gray-200 px-4 py-2 rounded"
+      >
+        Logout
+      </button>
+    </div>
+  </form>
+
+  <form *ngIf="editMode" (ngSubmit)="saveProfile()" class="space-y-4">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700">Username</label>
+      <input
+        [(ngModel)]="username"
+        name="username"
+        class="w-full px-3 py-2 border rounded"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-700">Email</label>
+      <input
+        [(ngModel)]="email"
+        name="email"
+        type="email"
+        class="w-full px-3 py-2 border rounded"
+      />
+    </div>
+
+    <div class="flex gap-3 pt-4">
+      <button
+        type="submit"
+        [disabled]="saving"
+        class="bg-indigo-600 text-white px-4 py-2 rounded"
+      >
+        {{ saving ? "Saving..." : "Save" }}
+      </button>
+      <button
+        type="button"
+        (click)="editMode = false"
+        class="bg-gray-200 px-4 py-2 rounded"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>

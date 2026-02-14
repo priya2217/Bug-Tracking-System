@@ -1,0 +1,127 @@
+<div class="flex h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <div
+    *ngIf="!isLoginPage"
+    [class.w-64]="!isCollapsed"
+    [class.w-16]="isCollapsed"
+    class="bg-white shadow-lg transition-all duration-300 flex flex-col"
+  >
+    <nav class="navbar">
+      <h1>Bug Tracker</h1>
+      <div class="nav-links">
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/bugs" routerLinkActive="active">Bugs</a>
+        <a routerLink="/projects" routerLinkActive="active">Projects</a>
+        <a routerLink="/profile" routerLinkActive="active">Profile</a>
+      </div>
+    </nav>
+
+    <router-outlet></router-outlet>
+
+    <!-- Logo / Toggle -->
+    <div class="flex items-center justify-between p-4 border-b">
+      <span *ngIf="!isCollapsed" class="text-xl font-bold">Bug Tracker</span>
+      <button (click)="toggleSidebar()" class="p-2 hover:bg-gray-200 rounded">
+        ☰
+      </button>
+    </div>
+
+    <!-- Menu -->
+    <nav class="flex-1 mt-4">
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="bg-gray-200"
+        class="flex items-center gap-3 p-3 hover:bg-gray-200 transition"
+      >
+        <span *ngIf="!isCollapsed">Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/bugs"
+        routerLinkActive="bg-gray-200"
+        class="flex items-center gap-3 p-3 hover:bg-gray-200 transition"
+      >
+        <span *ngIf="!isCollapsed">Bugs</span>
+      </a>
+
+      <a
+        routerLink="/projects"
+        routerLinkActive="bg-gray-200"
+        class="flex items-center gap-3 p-3 hover:bg-gray-200 transition"
+      >
+        <span *ngIf="!isCollapsed">Projects</span>
+      </a>
+
+      <a
+        routerLink="/profile"
+        routerLinkActive="bg-gray-200"
+        class="flex items-center gap-3 p-3 hover:bg-gray-200 transition"
+      >
+        <span *ngIf="!isCollapsed">Profile</span>
+      </a>
+    </nav>
+
+    <!-- Logout -->
+    <div class="p-4 border-t">
+      <a
+        routerLink="/login"
+        class="flex items-center gap-3 p-3 hover:bg-gray-200 transition"
+      >
+        ⏻ <span *ngIf="!isCollapsed">Logout</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 p-6 overflow-y-auto">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+<div class="p-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold">Bugs</h2>
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+      + Add Bug
+    </button>
+  </div>
+
+  <!-- Bugs Table -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Title</th>
+          <th class="px-4 py-2">Status</th>
+          <th class="px-4 py-2">Priority</th>
+          <th class="px-4 py-2">Created On</th>
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="px-4 py-2">1</td>
+          <td class="px-4 py-2">Login page crash</td>
+          <td class="px-4 py-2">
+            <span class="text-red-600 font-semibold">Open</span>
+          </td>
+          <td class="px-4 py-2">High</td>
+          <td class="px-4 py-2">2025-11-01</td>
+          <td class="px-4 py-2">
+            <button class="text-blue-600 hover:underline">Edit</button> |
+            <button class="text-red-600 hover:underline">Delete</button>
+          </td>
+        </tr>
+
+        <!-- Placeholder row -->
+        <tr class="border-t text-gray-500 italic">
+          <td colspan="6" class="px-4 py-4 text-center">
+            More bugs will appear here...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

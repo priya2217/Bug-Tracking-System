@@ -1,0 +1,35 @@
+/* app.component.scss */
+:host {
+  display: block;
+}
+.app-container {
+  display: flex;
+}
+
+.content-area {
+  flex: 1;
+  padding: 20px;
+}
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #111827;
+  color: white;
+
+  .nav-links a {
+    margin-left: 1rem;
+    text-decoration: none;
+    color: #e5e7eb;
+
+    &.active {
+      color: #3b82f6;
+      font-weight: 600;
+    }
+
+    &:hover {
+      color: #60a5fa;
+    }
+  }
+}

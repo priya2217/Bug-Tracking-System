@@ -1,0 +1,75 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>📊 Dashboard</h1>
+    <p class="subtitle">Welcome back! Here's your bug tracking overview</p>
+  </div>
+  
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon"></div>
+      <div class="stat-info">
+        <h3>Total Bugs</h3>
+        <p class="number">{{ summary.totalBugs }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card open">
+      <div class="stat-icon"></div>
+      <div class="stat-info">
+        <h3>Open</h3>
+        <p class="number">{{ summary.open }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card progress">
+      <div class="stat-icon"></div>
+      <div class="stat-info">
+        <h3>In Progress</h3>
+        <p class="number">{{ summary.inProgress }}</p>
+      </div>
+    </div>
+    
+    <div class="stat-card resolved">
+      <div class="stat-icon"></div>
+      <div class="stat-info">
+        <h3>Resolved</h3>
+        <p class="number">{{ summary.resolved }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="recent-bugs-section">
+    <h2>Recent Bugs</h2>
+    
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading bugs...</p>
+    </div>
+    
+    <div *ngIf="!loading && bugs.length === 0" class="no-bugs">
+      <p>No bugs found. Start by creating your first bug report!</p>
+      <button class="create-btn" (click)="navigateToBugs()">Create Bug</button>
+    </div>
+    
+    <div class="bugs-list" *ngIf="!loading && bugs.length > 0">
+      <div class="bug-item" *ngFor="let bug of bugs.slice(0, 5)">
+        <div class="bug-title">
+          <h4>{{ bug.title }}</h4>
+          <p class="bug-description">{{ bug.description }}</p>
+        </div>
+        <div class="bug-badges">
+          <span class="status" [ngClass]="bug.status.toLowerCase().replace(' ', '-')">
+            {{ bug.status }}
+          </span>
+          <span class="severity" [ngClass]="'severity-' + bug.severity.toLowerCase()">
+            {{ bug.severity }}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <button class="view-all-btn" (click)="navigateToBugs()" *ngIf="bugs.length > 0">
+      View All Bugs →
+    </button>
+  </div>
+</div>

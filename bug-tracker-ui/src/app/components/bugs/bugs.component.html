@@ -1,0 +1,221 @@
+<div
+  class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-10"
+>
+  <!-- Header -->
+  <div class="max-w-7xl mx-auto mb-8">
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+    >
+      <div>
+        <h1 class="text-4xl font-bold text-gray-800 mb-2"></h1>
+        <p class="text-gray-600">Manage and track all your bug reports</p>
+      </div>
+      <button
+        (click)="openForm()"
+        class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg w-full md:w-auto"
+      >
+        ➕ Create Bug
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-16">
+      <div
+        class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"
+      ></div>
+      <p class="text-gray-600 mt-4">Loading bugs...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      *ngIf="!loading && bugs.length === 0"
+      class="text-center py-16 bg-white rounded-2xl shadow-lg"
+    >
+      <div class="text-6xl mb-4">📝</div>
+      <h3 class="text-2xl font-bold text-gray-800 mb-2">No bugs yet</h3>
+      <p class="text-gray-600 mb-6">
+        Start by creating your first bug report to get organized
+      </p>
+      <button
+        (click)="openForm()"
+        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+      >
+        Create First Bug
+      </button>
+    </div>
+
+    <!-- Bugs Grid -->
+    <div
+      *ngIf="!loading && bugs.length > 0"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
+      <div
+        *ngFor="let b of bugs"
+        class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-t-4 transform hover:scale-105"
+      >
+        <!-- Card Header with Status Color -->
+        <div
+          [ngClass]="{
+            'border-t-red-500': b.status === 'Open',
+            'border-t-blue-500': b.status === 'In Progress',
+            'border-t-green-500': b.status === 'Resolved',
+          }"
+          class="p-6"
+        >
+          <!-- Title -->
+          <h3
+            class="text-lg font-bold text-gray-800 mb-3 truncate"
+            [title]="b.title"
+          >
+            {{ b.title }}
+          </h3>
+
+          <!-- Description -->
+          <p
+            class="text-gray-600 text-sm mb-4 line-clamp-2"
+            [title]="b.description"
+          >
+            {{ b.description || "No description provided" }}
+          </p>
+
+          <!-- Badges -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <!-- Status Badge -->
+            <span
+              [ngClass]="{
+                'bg-red-100 text-red-800': b.status === 'Open',
+                'bg-blue-100 text-blue-800': b.status === 'In Progress',
+                'bg-green-100 text-green-800': b.status === 'Resolved',
+              }"
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ b.status }}
+            </span>
+
+            <!-- Severity Badge -->
+            <span
+              [ngClass]="{
+                'bg-orange-100 text-orange-800': b.severity === 'High',
+                'bg-yellow-100 text-yellow-800': b.severity === 'Medium',
+                'bg-green-100 text-green-800': b.severity === 'Low',
+              }"
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ b.severity }}
+            </span>
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-gray-200 my-4"></div>
+
+          <!-- Delete Button -->
+          <button
+            (click)="deleteBug(b)"
+            class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm"
+          >
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div
+    *ngIf="showForm"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn"
+    >
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">🐛 Create New Bug</h2>
+        <button
+          (click)="closeForm()"
+          class="text-gray-500 hover:text-gray-700 text-2xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Form Fields -->
+      <form (ngSubmit)="saveBug()" class="space-y-4">
+        <!-- Title Input -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >Bug Title *</label
+          >
+          <input
+            type="text"
+            placeholder="Enter bug title"
+            [(ngModel)]="bugForm.title"
+            name="title"
+            required
+            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800"
+          />
+        </div>
+
+        <!-- Description Input -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >Description *</label
+          >
+          <textarea
+            placeholder="Describe the bug..."
+            [(ngModel)]="bugForm.description"
+            name="description"
+            required
+            rows="4"
+            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800 resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Project Selector -->
+        <div *ngIf="projects.length > 0">
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >Project</label
+          >
+          <select
+            [(ngModel)]="bugForm.projectId"
+            name="projectId"
+            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800"
+          >
+            <option *ngFor="let p of projects" [ngValue]="p.projectId">
+              {{ p.name }} (ID: {{ p.projectId }})
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="projects.length === 0" class="text-sm text-yellow-700">
+          No local projects found. Create a project on the
+          <a routerLink="/projects" class="text-indigo-600 underline"
+            >Projects</a
+          >
+          page or ensure backend projects exist.
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            (click)="closeForm()"
+            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="savingBug"
+            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ savingBug ? "⏳ Saving..." : "Save Bug" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
