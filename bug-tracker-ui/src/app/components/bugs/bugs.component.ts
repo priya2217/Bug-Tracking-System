@@ -1,32 +1,36 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { BugService } from '../../services/bug.service';
 import { AuthService } from '../../services/auth.service';
 import { Bug } from '../../models/bug.models';
 import { ProjectService } from '../../services/project.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   standalone: true,
   selector: 'app-bugs',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './bugs.component.html',
 })
 export class BugComponent implements OnInit {
   bugs: Bug[] = [];
+  filteredBugs: Bug[] = [];
   projects: { projectId: number; name: string }[] = [];
   showForm = false;
   loading = true;
   savingBug = false;
+  filterStatus = 'all';
 
   bugForm: Bug = {
     title: '',
     description: '',
     status: 'Open',
-    severity: 'Low',
+    severity: 'Medium',
     projectId: 0,
-    assigneeTo: 1,
-    creatorBy: 0,
+    assigneeId: 1,
+    creatorId: 0,
   };
 
   constructor(
@@ -53,6 +57,7 @@ export class BugComponent implements OnInit {
     this.bugService.getAllBugs().subscribe({
       next: (b) => {
         this.bugs = b;
+        this.filterBugs();
         this.loading = false;
       },
       error: () => {
@@ -61,15 +66,34 @@ export class BugComponent implements OnInit {
     });
   }
 
+  filterBugs() {
+    if (this.filterStatus === 'all') {
+      this.filteredBugs = [...this.bugs];
+    } else {
+      this.filteredBugs = this.bugs.filter(
+        (bug) => bug.status === this.filterStatus,
+      );
+    }
+  }
+
+  getStatusCount(status: string): number {
+    return this.bugs.filter((bug) => bug.status === status).length;
+  }
+
+  getProjectName(projectId: number): string {
+    const project = this.projects.find((p) => p.projectId === projectId);
+    return project ? project.name : '';
+  }
+
   openForm() {
     this.bugForm = {
       title: '',
       description: '',
       status: 'Open',
-      severity: 'Low',
+      severity: 'Medium',
       projectId: this.projects.length ? this.projects[0].projectId : 0,
-      assigneeTo: 1,
-      creatorBy: 0,
+      assigneeId: 1,
+      creatorId: 0,
     };
     this.showForm = true;
   }
@@ -84,6 +108,11 @@ export class BugComponent implements OnInit {
       return;
     }
 
+    if (!this.bugForm.projectId || this.bugForm.projectId === 0) {
+      alert('Please select a project');
+      return;
+    }
+
     const userId = this.auth.getUserId();
     if (!userId || userId === 0) {
       alert('User not authenticated. Please log in again.');
@@ -91,20 +120,17 @@ export class BugComponent implements OnInit {
     }
 
     this.savingBug = true;
-    this.bugForm.creatorBy = userId;
-    console.log('Saving bug:', this.bugForm);
+    this.bugForm.creatorId = userId;
 
     this.bugService.createBug(this.bugForm).subscribe({
       next: (response) => {
-        console.log('Bug created successfully:', response);
-        alert('Bug created successfully!');
+        alert('Bug reported successfully! 🎉');
         this.savingBug = false;
         this.closeForm();
         this.loadBugs();
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         console.error('Error creating bug:', err);
-        console.error('Error details:', err.error);
         this.savingBug = false;
         alert(
           `Failed to create bug: ${err.error?.message || err.message || 'Unknown error'}`,
@@ -113,9 +139,37 @@ export class BugComponent implements OnInit {
     });
   }
 
+  updateBugStatus(bug: Bug, newStatus: string) {
+    if (bug.status === newStatus) {
+      return;
+    }
+
+    const updatedBug = { ...bug, status: newStatus };
+
+    this.bugService.updateBug(bug.id!, updatedBug).subscribe({
+      next: () => {
+        alert(`Bug status updated to: ${newStatus}`);
+        this.loadBugs();
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error updating bug:', err);
+        alert('Failed to update bug status');
+      },
+    });
+  }
+
   deleteBug(bug: Bug) {
-    if (confirm(`Are you sure you want to delete "${bug.title}"?`)) {
-      this.bugService.deleteBug(bug.id!).subscribe(() => this.loadBugs());
+    if (confirm(`Delete "${bug.title}"?\n\nThis action cannot be undone.`)) {
+      this.bugService.deleteBug(bug.id!).subscribe({
+        next: () => {
+          alert('Bug deleted successfully');
+          this.loadBugs();
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Error deleting bug:', err);
+          alert('Failed to delete bug');
+        },
+      });
     }
   }
 }

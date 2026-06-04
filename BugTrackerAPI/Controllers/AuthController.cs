@@ -15,77 +15,118 @@ namespace BugTrackerAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        private const string JwtKey = "THIS_IS_MY_SUPER_SECRET_KEY_FOR_BUG_TRACKER_2026";
-        private const string JwtIssuer = "BugTrackerAPI";
-
-        public AuthController(AppDbContext context)
+        public AuthController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         // REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-                return BadRequest("User already exists.");
-
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            var user = new User
+            try
             {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = hashedPassword,
-                Role = request.Role,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                // Check if username already exists
+                if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+                    return BadRequest(new { message = "Username already exists." });
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                // Check if email already exists
+                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                    return BadRequest(new { message = "Email already exists." });
 
-            return Ok(new { message = "User registered successfully." });
+                // Hash the password
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                // Create new user
+                var user = new User
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    PasswordHash = hashedPassword,
+                    Role = request.Role ?? "User",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "User registered successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Registration failed", error = ex.Message });
+            }
         }
 
         // LOGIN
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _context.Users
-                .SingleOrDefaultAsync(u =>
-                    u.Username == request.UsernameOrEmail ||
-                    u.Email == request.UsernameOrEmail);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                return Unauthorized("Invalid credentials.");
-
-            var token = GenerateJwtToken(user);
-
-            return Ok(new AuthResponse
+            try
             {
-                Username = user.Username,
-                Role = user.Role,
-                Token = token
-            });
+                // Find user by username or email
+                var user = await _context.Users
+                    .SingleOrDefaultAsync(u =>
+                        u.Username == request.UsernameOrEmail ||
+                        u.Email == request.UsernameOrEmail);
+
+                // Validate user and password
+                if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                    return Unauthorized(new { message = "Invalid credentials." });
+
+                // Generate JWT token
+                var token = GenerateJwtToken(user);
+
+                // Return response with userId
+                return Ok(new AuthResponse
+                {
+                    Username = user.Username,
+                    Role = user.Role,
+                    Token = token,
+                    UserId = user.Id // ✅ This is needed by Angular
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Login failed", error = ex.Message });
+            }
         }
 
+        // JWT TOKEN GENERATOR
         private string GenerateJwtToken(User user)
         {
+            // Create claims for the token
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtKey));
+            // ✅ FIXED: Get JWT key safely
+            var jwtKey = _config["Jwt:Key"];
+            
+            // Throw error if JWT key is not configured
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT Key is not configured. Please add 'Jwt:Key' to appsettings.json"
+                );
+            }
+
+            // Create security key
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            // Create token
             var token = new JwtSecurityToken(
-                issuer: JwtIssuer,
-                audience: JwtIssuer,
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds

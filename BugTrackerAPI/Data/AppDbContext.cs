@@ -5,26 +5,17 @@ namespace BugTrackerAPI.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
-        {
-        }
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<Bug> Bugs { get; set; }
-        public DbSet<Project> Projects { get; set; }
         public DbSet<User> Users { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.ConfigureWarnings(w =>
-                w.Log(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-        }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<Bug> Bugs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Relationships
+            // Configure relationships
             modelBuilder.Entity<Bug>()
                 .HasOne(b => b.Project)
                 .WithMany()
@@ -35,13 +26,31 @@ namespace BugTrackerAPI.Data
                 .HasOne(b => b.Assignee)
                 .WithMany()
                 .HasForeignKey(b => b.AssigneeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Bug>()
                 .HasOne(b => b.Creator)
                 .WithMany()
                 .HasForeignKey(b => b.CreatorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure indexes for better performance
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Bug>()
+                .HasIndex(b => b.Status);
+
+            modelBuilder.Entity<Bug>()
+                .HasIndex(b => b.ProjectId);
         }
+
+        // ✅ REMOVED: The problematic OnConfiguring method with PendingModelChangesWarning
+        // This warning configuration doesn't exist in EF Core 8.0
     }
 }

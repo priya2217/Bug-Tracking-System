@@ -17,7 +17,7 @@ namespace BugTrackerAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -64,6 +64,8 @@ namespace BugTrackerAPI.Migrations
                     b.HasIndex("CreatorId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("Bugs");
                 });
@@ -131,6 +133,12 @@ namespace BugTrackerAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -139,12 +147,12 @@ namespace BugTrackerAPI.Migrations
                     b.HasOne("BugTrackerAPI.Models.User", "Assignee")
                         .WithMany()
                         .HasForeignKey("AssigneeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("BugTrackerAPI.Models.User", "Creator")
                         .WithMany()
                         .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("BugTrackerAPI.Models.Project", "Project")
                         .WithMany()

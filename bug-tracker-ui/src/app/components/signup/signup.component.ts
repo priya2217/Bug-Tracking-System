@@ -10,7 +10,6 @@ import { RegisterRequest } from '../../models/user.model';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss'],
 })
 export class SignupComponent {
   signupData: RegisterRequest = {
@@ -18,6 +17,7 @@ export class SignupComponent {
     email: '',
     password: '',
   };
+  agreedToTerms = false;
   loading = false;
   errorMessage = '';
   successMessage = '';
@@ -28,6 +28,31 @@ export class SignupComponent {
   ) {}
 
   onSubmit(): void {
+    // Validation
+    if (
+      !this.signupData.username ||
+      !this.signupData.email ||
+      !this.signupData.password
+    ) {
+      this.errorMessage = 'Please fill in all fields';
+      return;
+    }
+
+    if (this.signupData.username.length < 3) {
+      this.errorMessage = 'Username must be at least 3 characters long';
+      return;
+    }
+
+    if (this.signupData.password.length < 6) {
+      this.errorMessage = 'Password must be at least 6 characters long';
+      return;
+    }
+
+    if (!this.agreedToTerms) {
+      this.errorMessage = 'You must agree to the Terms of Service';
+      return;
+    }
+
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';

@@ -1,0 +1,393 @@
+<div class="min-h-screen bg-slate-50">
+  <!-- Top Navigation Bar -->
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <!-- Left side -->
+      <div class="flex items-center gap-4">
+        <button (click)="goBack()" class="text-slate-600 hover:text-slate-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+        
+        <h1 class="text-xl font-semibold text-slate-900">Board View</h1>
+        
+        <!-- View Tabs -->
+        <div class="flex items-center gap-2 ml-8">
+          <button 
+            routerLink="/bugs"
+            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            List
+          </button>
+          <button 
+            class="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg"
+          >
+            Board
+          </button>
+          <button 
+            routerLink="/bugs/calendar"
+            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            Calendar
+          </button>
+        </div>
+      </div>
+
+      <!-- Right side -->
+      <div class="flex items-center gap-3">
+        <!-- Search -->
+        <div class="relative">
+          <input
+            type="search"
+            placeholder="Search board..."
+            [(ngModel)]="searchTerm"
+            (input)="filterBugs()"
+            class="w-64 pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <!-- Filter by assignee -->
+        <select 
+          [(ngModel)]="filterAssignee"
+          (change)="filterBugs()"
+          class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Assignees</option>
+          <option *ngFor="let user of users" [value]="user.id">{{ user.username }}</option>
+        </select>
+
+        <!-- Filter button -->
+        <button 
+          (click)="toggleFilters()"
+          class="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filter
+        </button>
+
+        <!-- Group by -->
+        <select class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option>Group by Status</option>
+          <option>Group by Project</option>
+          <option>Group by Assignee</option>
+          <option>Group by Priority</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kanban Board -->
+  <div class="p-6 overflow-x-auto">
+    <div class="flex gap-4 min-w-max">
+      
+      <!-- Column: TO DO (Open) -->
+      <div class="flex-shrink-0 w-80 bg-white rounded-lg border border-slate-200">
+        <!-- Column Header -->
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+            <h3 class="font-semibold text-slate-900">TO DO</h3>
+            <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
+              {{ getColumnCount('Open') }}
+            </span>
+          </div>
+          <button class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="p-3 space-y-3 min-h-[500px]">
+          <div
+            *ngFor="let bug of getBugsByStatus('Open')"
+            class="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer group"
+            (click)="openBugDetails(bug)"
+            draggable="true"
+            (dragstart)="onDragStart($event, bug)"
+            (dragend)="onDragEnd($event)"
+          >
+            <!-- Card Content -->
+            <h4 class="font-medium text-slate-900 mb-2 group-hover:text-blue-600">
+              {{ bug.title }}
+            </h4>
+
+            <!-- Due Date -->
+            <div *ngIf="bug.dueDate" class="flex items-center gap-1 text-xs text-slate-500 mb-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ bug.dueDate | date:'MMM dd, yyyy' }}
+            </div>
+
+            <!-- Bottom row -->
+            <div class="flex items-center justify-between">
+              <!-- Bug ID with checkbox -->
+              <div class="flex items-center gap-2">
+                <input type="checkbox" class="rounded border-slate-300" />
+                <span class="text-xs font-medium text-slate-500">BUG-{{ bug.id }}</span>
+              </div>
+
+              <!-- Assignee avatar -->
+              <div class="flex items-center gap-2">
+                <!-- Priority badge -->
+                <span
+                  *ngIf="bug.severity"
+                  [ngClass]="{
+                    'bg-red-100 text-red-700': bug.severity === 'High',
+                    'bg-orange-100 text-orange-700': bug.severity === 'Medium',
+                    'bg-slate-100 text-slate-600': bug.severity === 'Low'
+                  }"
+                  class="px-2 py-0.5 rounded text-xs font-medium"
+                >
+                  {{ bug.severity }}
+                </span>
+
+                <!-- Assignee -->
+                <div 
+                  *ngIf="bug.assigneeId"
+                  class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                  [title]="getAssigneeName(bug.assigneeId)"
+                >
+                  {{ getAssigneeInitial(bug.assigneeId) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- More actions menu (appears on hover) -->
+            <button 
+              class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-600"
+              (click)="openBugMenu($event, bug)"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Create button -->
+          <button 
+            (click)="createBugInColumn('Open')"
+            class="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-medium"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+      <!-- Column: IN PROGRESS -->
+      <div 
+        class="flex-shrink-0 w-80 bg-white rounded-lg border border-slate-200"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'In Progress')"
+      >
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <h3 class="font-semibold text-slate-900">IN PROGRESS</h3>
+            <span class="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs font-medium">
+              {{ getColumnCount('In Progress') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3 space-y-3 min-h-[500px]">
+          <div
+            *ngFor="let bug of getBugsByStatus('In Progress')"
+            class="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer group"
+            (click)="openBugDetails(bug)"
+            draggable="true"
+            (dragstart)="onDragStart($event, bug)"
+            (dragend)="onDragEnd($event)"
+          >
+            <h4 class="font-medium text-slate-900 mb-2 group-hover:text-blue-600">
+              {{ bug.title }}
+            </h4>
+            <div *ngIf="bug.dueDate" class="flex items-center gap-1 text-xs text-slate-500 mb-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ bug.dueDate | date:'MMM dd, yyyy' }}
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" class="rounded border-slate-300" />
+                <span class="text-xs font-medium text-slate-500">BUG-{{ bug.id }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  *ngIf="bug.severity"
+                  [ngClass]="{
+                    'bg-red-100 text-red-700': bug.severity === 'High',
+                    'bg-orange-100 text-orange-700': bug.severity === 'Medium',
+                    'bg-slate-100 text-slate-600': bug.severity === 'Low'
+                  }"
+                  class="px-2 py-0.5 rounded text-xs font-medium"
+                >
+                  {{ bug.severity }}
+                </span>
+                <div 
+                  *ngIf="bug.assigneeId"
+                  class="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                >
+                  {{ getAssigneeInitial(bug.assigneeId) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            (click)="createBugInColumn('In Progress')"
+            class="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-medium"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+      <!-- Column: IN REVIEW -->
+      <div 
+        class="flex-shrink-0 w-80 bg-white rounded-lg border border-slate-200"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'In Review')"
+      >
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-amber-500 rounded-full"></div>
+            <h3 class="font-semibold text-slate-900">IN REVIEW</h3>
+            <span class="px-2 py-0.5 bg-amber-100 text-amber-600 rounded-full text-xs font-medium">
+              {{ getColumnCount('In Review') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3 space-y-3 min-h-[500px]">
+          <div
+            *ngFor="let bug of getBugsByStatus('In Review')"
+            class="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer group"
+            (click)="openBugDetails(bug)"
+            draggable="true"
+            (dragstart)="onDragStart($event, bug)"
+            (dragend)="onDragEnd($event)"
+          >
+            <h4 class="font-medium text-slate-900 mb-2 group-hover:text-blue-600">
+              {{ bug.title }}
+            </h4>
+            <div *ngIf="bug.dueDate" class="flex items-center gap-1 text-xs text-slate-500 mb-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ bug.dueDate | date:'MMM dd, yyyy' }}
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" class="rounded border-slate-300" />
+                <span class="text-xs font-medium text-slate-500">BUG-{{ bug.id }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  *ngIf="bug.severity"
+                  [ngClass]="{
+                    'bg-red-100 text-red-700': bug.severity === 'High',
+                    'bg-orange-100 text-orange-700': bug.severity === 'Medium',
+                    'bg-slate-100 text-slate-600': bug.severity === 'Low'
+                  }"
+                  class="px-2 py-0.5 rounded text-xs font-medium"
+                >
+                  {{ bug.severity }}
+                </span>
+                <div 
+                  *ngIf="bug.assigneeId"
+                  class="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                >
+                  {{ getAssigneeInitial(bug.assigneeId) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            (click)="createBugInColumn('In Review')"
+            class="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-medium"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+      <!-- Column: DONE (Resolved) -->
+      <div 
+        class="flex-shrink-0 w-80 bg-white rounded-lg border border-slate-200"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, 'Resolved')"
+      >
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <h3 class="font-semibold text-slate-900">DONE</h3>
+            <span class="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-xs font-medium">
+              {{ getColumnCount('Resolved') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-3 space-y-3 min-h-[500px]">
+          <div
+            *ngFor="let bug of getBugsByStatus('Resolved')"
+            class="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer group opacity-75"
+            (click)="openBugDetails(bug)"
+          >
+            <h4 class="font-medium text-slate-900 mb-2 line-through group-hover:text-green-600">
+              {{ bug.title }}
+            </h4>
+            <div *ngIf="bug.dueDate" class="flex items-center gap-1 text-xs text-slate-500 mb-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ bug.dueDate | date:'MMM dd, yyyy' }}
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" checked class="rounded border-slate-300" />
+                <span class="text-xs font-medium text-slate-500">BUG-{{ bug.id }}</span>
+              </div>
+              <div 
+                *ngIf="bug.assigneeId"
+                class="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center text-white text-xs font-medium"
+              >
+                {{ getAssigneeInitial(bug.assigneeId) }}
+              </div>
+            </div>
+          </div>
+
+          <button 
+            (click)="createBugInColumn('Resolved')"
+            class="w-full px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 font-medium"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

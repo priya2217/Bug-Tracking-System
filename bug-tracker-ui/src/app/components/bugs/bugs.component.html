@@ -1,123 +1,172 @@
-<div
-  class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 md:p-10"
->
+<div class="min-h-screen bg-slate-50">
   <!-- Header -->
-  <div class="max-w-7xl mx-auto mb-8">
-    <div
-      class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-    >
-      <div>
-        <h1 class="text-4xl font-bold text-gray-800 mb-2"></h1>
-        <p class="text-gray-600">Manage and track all your bug reports</p>
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <span class="text-3xl">🐛</span>
+            Bug Reports
+          </h1>
+          <p class="text-sm text-slate-600 mt-1">Track and manage your project bugs</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Filter Dropdown -->
+          <select 
+            [(ngModel)]="filterStatus"
+            (change)="filterBugs()"
+            class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value="all">All Status</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+
+          <!-- Create Button -->
+          <button
+            (click)="openForm()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <span class="text-lg">+</span>
+            <span class="hidden sm:inline">New Bug</span>
+          </button>
+        </div>
       </div>
-      <button
-        (click)="openForm()"
-        class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg w-full md:w-auto"
-      >
-        ➕ Create Bug
-      </button>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="max-w-7xl mx-auto">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <div class="text-sm text-slate-600 mb-1">Total Bugs</div>
+        <div class="text-2xl font-bold text-slate-900">{{ bugs.length }}</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <div class="text-sm text-slate-600 mb-1">Open</div>
+        <div class="text-2xl font-bold text-red-600">{{ getStatusCount('Open') }}</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <div class="text-sm text-slate-600 mb-1">In Progress</div>
+        <div class="text-2xl font-bold text-blue-600">{{ getStatusCount('In Progress') }}</div>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <div class="text-sm text-slate-600 mb-1">Resolved</div>
+        <div class="text-2xl font-bold text-green-600">{{ getStatusCount('Resolved') }}</div>
+      </div>
+    </div>
+
     <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-16">
-      <div
-        class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"
-      ></div>
-      <p class="text-gray-600 mt-4">Loading bugs...</p>
+    <div *ngIf="loading" class="text-center py-20">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-blue-600"></div>
+      <p class="text-slate-600 mt-4">Loading bugs...</p>
     </div>
 
     <!-- Empty State -->
-    <div
-      *ngIf="!loading && bugs.length === 0"
-      class="text-center py-16 bg-white rounded-2xl shadow-lg"
-    >
-      <div class="text-6xl mb-4">📝</div>
-      <h3 class="text-2xl font-bold text-gray-800 mb-2">No bugs yet</h3>
-      <p class="text-gray-600 mb-6">
-        Start by creating your first bug report to get organized
+    <div *ngIf="!loading && filteredBugs.length === 0" class="text-center py-20 bg-white rounded-xl border border-slate-200">
+      <div class="text-6xl mb-4">🔍</div>
+      <h3 class="text-xl font-semibold text-slate-900 mb-2">
+        {{ bugs.length === 0 ? 'No bugs reported yet' : 'No bugs match your filter' }}
+      </h3>
+      <p class="text-slate-600 mb-6">
+        {{ bugs.length === 0 ? 'Start tracking bugs by creating your first report' : 'Try adjusting your filter settings' }}
       </p>
       <button
+        *ngIf="bugs.length === 0"
         (click)="openForm()"
-        class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
       >
+        <span>+</span>
         Create First Bug
       </button>
     </div>
 
-    <!-- Bugs Grid -->
-    <div
-      *ngIf="!loading && bugs.length > 0"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
+    <!-- Bugs List -->
+    <div *ngIf="!loading && filteredBugs.length > 0" class="space-y-4">
       <div
-        *ngFor="let b of bugs"
-        class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-t-4 transform hover:scale-105"
+        *ngFor="let bug of filteredBugs"
+        class="bg-white rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200"
       >
-        <!-- Card Header with Status Color -->
-        <div
-          [ngClass]="{
-            'border-t-red-500': b.status === 'Open',
-            'border-t-blue-500': b.status === 'In Progress',
-            'border-t-green-500': b.status === 'Resolved',
-          }"
-          class="p-6"
-        >
-          <!-- Title -->
-          <h3
-            class="text-lg font-bold text-gray-800 mb-3 truncate"
-            [title]="b.title"
-          >
-            {{ b.title }}
-          </h3>
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-slate-900 mb-2">{{ bug.title }}</h3>
+              <p class="text-slate-600 text-sm">{{ bug.description || 'No description provided' }}</p>
+            </div>
+            <button
+              (click)="deleteBug(bug)"
+              class="ml-4 text-slate-400 hover:text-red-600 transition-colors"
+              title="Delete bug"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
 
-          <!-- Description -->
-          <p
-            class="text-gray-600 text-sm mb-4 line-clamp-2"
-            [title]="b.description"
-          >
-            {{ b.description || "No description provided" }}
-          </p>
-
-          <!-- Badges -->
-          <div class="flex flex-wrap gap-2 mb-4">
+          <!-- Metadata -->
+          <div class="flex flex-wrap items-center gap-3">
             <!-- Status Badge -->
             <span
               [ngClass]="{
-                'bg-red-100 text-red-800': b.status === 'Open',
-                'bg-blue-100 text-blue-800': b.status === 'In Progress',
-                'bg-green-100 text-green-800': b.status === 'Resolved',
+                'bg-red-100 text-red-700 border-red-200': bug.status === 'Open',
+                'bg-blue-100 text-blue-700 border-blue-200': bug.status === 'In Progress',
+                'bg-green-100 text-green-700 border-green-200': bug.status === 'Resolved'
               }"
-              class="px-3 py-1 rounded-full text-xs font-semibold"
+              class="px-3 py-1 rounded-full text-xs font-medium border"
             >
-              {{ b.status }}
+              {{ bug.status }}
             </span>
 
             <!-- Severity Badge -->
             <span
               [ngClass]="{
-                'bg-orange-100 text-orange-800': b.severity === 'High',
-                'bg-yellow-100 text-yellow-800': b.severity === 'Medium',
-                'bg-green-100 text-green-800': b.severity === 'Low',
+                'bg-orange-100 text-orange-700 border-orange-200': bug.severity === 'High',
+                'bg-yellow-100 text-yellow-700 border-yellow-200': bug.severity === 'Medium',
+                'bg-slate-100 text-slate-700 border-slate-200': bug.severity === 'Low'
               }"
-              class="px-3 py-1 rounded-full text-xs font-semibold"
+              class="px-3 py-1 rounded-full text-xs font-medium border"
             >
-              {{ b.severity }}
+              Severity: {{ bug.severity }}
+            </span>
+
+            <!-- Project Badge -->
+            <span *ngIf="getProjectName(bug.projectId)" class="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+              📁 {{ getProjectName(bug.projectId) }}
+            </span>
+
+            <!-- Bug ID -->
+            <span class="text-xs text-slate-500">
+              #{{ bug.id }}
             </span>
           </div>
 
-          <!-- Divider -->
-          <div class="border-t border-gray-200 my-4"></div>
-
-          <!-- Delete Button -->
-          <button
-            (click)="deleteBug(b)"
-            class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-          >
-            🗑️ Delete
-          </button>
+          <!-- Actions -->
+          <div class="mt-4 pt-4 border-t border-slate-200 flex gap-2">
+            <button
+              (click)="updateBugStatus(bug, 'Open')"
+              [disabled]="bug.status === 'Open'"
+              class="text-xs px-3 py-1.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Mark Open
+            </button>
+            <button
+              (click)="updateBugStatus(bug, 'In Progress')"
+              [disabled]="bug.status === 'In Progress'"
+              class="text-xs px-3 py-1.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              In Progress
+            </button>
+            <button
+              (click)="updateBugStatus(bug, 'Resolved')"
+              [disabled]="bug.status === 'Resolved'"
+              class="text-xs px-3 py-1.5 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Resolve
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -127,92 +176,128 @@
   <div
     *ngIf="showForm"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    (click)="closeForm()"
   >
     <div
-      class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn"
+      class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      (click)="$event.stopPropagation()"
     >
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">🐛 Create New Bug</h2>
+      <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
+        <h2 class="text-xl font-bold text-slate-900">🐛 Report New Bug</h2>
         <button
           (click)="closeForm()"
-          class="text-gray-500 hover:text-gray-700 text-2xl"
+          class="text-slate-400 hover:text-slate-600 transition-colors"
         >
-          ✕
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
-      <!-- Form Fields -->
-      <form (ngSubmit)="saveBug()" class="space-y-4">
-        <!-- Title Input -->
+      <!-- Form -->
+      <form (ngSubmit)="saveBug()" class="p-6 space-y-5">
+        <!-- Title -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2"
-            >Bug Title *</label
-          >
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Bug Title <span class="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            placeholder="Enter bug title"
+            placeholder="e.g., Login button not responding on mobile"
             [(ngModel)]="bugForm.title"
             name="title"
             required
-            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800"
+            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
 
-        <!-- Description Input -->
+        <!-- Description -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2"
-            >Description *</label
-          >
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Description <span class="text-red-500">*</span>
+          </label>
           <textarea
-            placeholder="Describe the bug..."
+            placeholder="Describe the bug in detail... What happened? What were you expecting?"
             [(ngModel)]="bugForm.description"
             name="description"
             required
             rows="4"
-            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800 resize-none"
+            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
           ></textarea>
         </div>
 
-        <!-- Project Selector -->
-        <div *ngIf="projects.length > 0">
-          <label class="block text-sm font-semibold text-gray-700 mb-2"
-            >Project</label
-          >
+        <!-- Project Selection -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Project <span class="text-red-500">*</span>
+          </label>
           <select
             [(ngModel)]="bugForm.projectId"
             name="projectId"
-            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors text-gray-800"
+            required
+            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
-            <option *ngFor="let p of projects" [ngValue]="p.projectId">
-              {{ p.name }} (ID: {{ p.projectId }})
+            <option value="" disabled>Select a project</option>
+            <option *ngFor="let project of projects" [value]="project.projectId">
+              {{ project.name }}
             </option>
           </select>
+          <p *ngIf="projects.length === 0" class="mt-2 text-sm text-amber-600">
+            ⚠️ No projects found. <a routerLink="/projects" class="underline hover:text-amber-700">Create a project first</a>
+          </p>
         </div>
 
-        <div *ngIf="projects.length === 0" class="text-sm text-yellow-700">
-          No local projects found. Create a project on the
-          <a routerLink="/projects" class="text-indigo-600 underline"
-            >Projects</a
-          >
-          page or ensure backend projects exist.
+        <!-- Status and Severity Grid -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Status -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Status
+            </label>
+            <select
+              [(ngModel)]="bugForm.status"
+              name="status"
+              class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+
+          <!-- Severity -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Severity
+            </label>
+            <select
+              [(ngModel)]="bugForm.severity"
+              name="severity"
+              class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
         </div>
 
-        <!-- Buttons -->
-        <div class="flex gap-3 pt-4">
+        <!-- Action Buttons -->
+        <div class="flex gap-3 pt-4 border-t border-slate-200">
           <button
             type="button"
             (click)="closeForm()"
-            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors"
+            class="flex-1 px-6 py-2.5 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            [disabled]="savingBug"
-            class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="savingBug || projects.length === 0"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
           >
-            {{ savingBug ? "⏳ Saving..." : "Save Bug" }}
+            {{ savingBug ? '💾 Saving...' : '✓ Save Bug' }}
           </button>
         </div>
       </form>

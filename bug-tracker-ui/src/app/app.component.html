@@ -13,6 +13,7 @@
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
         <a routerLink="/bugs" routerLinkActive="active">Bugs</a>
         <a routerLink="/projects" routerLinkActive="active">Projects</a>
+        <a routerLink="/board" routerLinkActive="active">Board</a>
         <a routerLink="/profile" routerLinkActive="active">Profile</a>
       </div>
     </nav>
@@ -52,6 +53,23 @@
       >
         <span *ngIf="!isCollapsed">Projects</span>
       </a>
+      <a 
+  routerLink="/board" 
+  routerLinkActive="active"
+  class="nav-link"
+>
+  <svg><!-- icon --></svg>
+  <span>Board</span>
+</a>
+ <a 
+  routerLink="/reports" 
+  routerLinkActive="active"
+  class="nav-link"
+>
+  <svg><!-- icon --></svg>
+  <span>Report</span>
+</a>
+
 
       <a
         routerLink="/profile"

@@ -1,75 +1,212 @@
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>📊 Dashboard</h1>
-    <p class="subtitle">Welcome back! Here's your bug tracking overview</p>
-  </div>
-  
-  <div class="stats-grid">
-    <div class="stat-card total">
-      <div class="stat-icon"></div>
-      <div class="stat-info">
-        <h3>Total Bugs</h3>
-        <p class="number">{{ summary.totalBugs }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card open">
-      <div class="stat-icon"></div>
-      <div class="stat-info">
-        <h3>Open</h3>
-        <p class="number">{{ summary.open }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card progress">
-      <div class="stat-icon"></div>
-      <div class="stat-info">
-        <h3>In Progress</h3>
-        <p class="number">{{ summary.inProgress }}</p>
-      </div>
-    </div>
-    
-    <div class="stat-card resolved">
-      <div class="stat-icon"></div>
-      <div class="stat-info">
-        <h3>Resolved</h3>
-        <p class="number">{{ summary.resolved }}</p>
+<div class="min-h-screen bg-slate-50">
+  <!-- Header -->
+  <div class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Welcome back, {{ getUsername() }}! 👋</h1>
+        <p class="text-sm text-slate-600 mt-1">Here's what's happening with your projects</p>
       </div>
     </div>
   </div>
 
-  <div class="recent-bugs-section">
-    <h2>Recent Bugs</h2>
-    
-    <div *ngIf="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Loading bugs...</p>
-    </div>
-    
-    <div *ngIf="!loading && bugs.length === 0" class="no-bugs">
-      <p>No bugs found. Start by creating your first bug report!</p>
-      <button class="create-btn" (click)="navigateToBugs()">Create Bug</button>
-    </div>
-    
-    <div class="bugs-list" *ngIf="!loading && bugs.length > 0">
-      <div class="bug-item" *ngFor="let bug of bugs.slice(0, 5)">
-        <div class="bug-title">
-          <h4>{{ bug.title }}</h4>
-          <p class="bug-description">{{ bug.description }}</p>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Bugs -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+            All Time
+          </span>
         </div>
-        <div class="bug-badges">
-          <span class="status" [ngClass]="bug.status.toLowerCase().replace(' ', '-')">
-            {{ bug.status }}
+        <div class="text-3xl font-bold text-slate-900 mb-1">{{ stats.totalBugs }}</div>
+        <div class="text-sm text-slate-600">Total Bugs</div>
+      </div>
+
+      <!-- Open Bugs -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+            Active
           </span>
-          <span class="severity" [ngClass]="'severity-' + bug.severity.toLowerCase()">
-            {{ bug.severity }}
+        </div>
+        <div class="text-3xl font-bold text-slate-900 mb-1">{{ stats.openBugs }}</div>
+        <div class="text-sm text-slate-600">Open Bugs</div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+            Working
           </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-900 mb-1">{{ stats.inProgressBugs }}</div>
+        <div class="text-sm text-slate-600">In Progress</div>
+      </div>
+
+      <!-- Resolved -->
+      <div class="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+            Done
+          </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-900 mb-1">{{ stats.resolvedBugs }}</div>
+        <div class="text-sm text-slate-600">Resolved</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Recent Bugs -->
+      <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">Recent Bugs</h2>
+          <a routerLink="/bugs" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            View All →
+          </a>
+        </div>
+        <div class="divide-y divide-slate-200">
+          <div *ngFor="let bug of recentBugs.slice(0, 5)" class="px-6 py-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="font-semibold text-slate-900 flex-1">{{ bug.title }}</h3>
+              <span
+                [ngClass]="{
+                  'bg-red-100 text-red-700': bug.status === 'Open',
+                  'bg-blue-100 text-blue-700': bug.status === 'In Progress',
+                  'bg-green-100 text-green-700': bug.status === 'Resolved'
+                }"
+                class="px-2 py-1 rounded-full text-xs font-medium ml-3 whitespace-nowrap"
+              >
+                {{ bug.status }}
+              </span>
+            </div>
+            <p class="text-sm text-slate-600 line-clamp-1">{{ bug.description }}</p>
+            <div class="flex items-center gap-3 mt-2 text-xs text-slate-500">
+              <span
+                [ngClass]="{
+                  'bg-orange-100 text-orange-700': bug.severity === 'High',
+                  'bg-yellow-100 text-yellow-700': bug.severity === 'Medium',
+                  'bg-slate-100 text-slate-700': bug.severity === 'Low'
+                }"
+                class="px-2 py-0.5 rounded-full font-medium"
+              >
+                {{ bug.severity }}
+              </span>
+              <span>Bug #{{ bug.id }}</span>
+            </div>
+          </div>
+          <div *ngIf="recentBugs.length === 0" class="px-6 py-12 text-center text-slate-500">
+            <div class="text-4xl mb-2">📋</div>
+            <p>No bugs reported yet</p>
+            <a routerLink="/bugs" class="text-blue-600 hover:text-blue-700 text-sm font-medium mt-2 inline-block">
+              Create your first bug →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="space-y-6">
+        <!-- Projects Overview -->
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900">Projects</h2>
+            <a routerLink="/projects" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              Manage →
+            </a>
+          </div>
+          <div class="p-6">
+            <div class="text-center mb-4">
+              <div class="text-4xl font-bold text-slate-900">{{ stats.totalProjects }}</div>
+              <div class="text-sm text-slate-600 mt-1">Active Projects</div>
+            </div>
+            <div class="space-y-2">
+              <div *ngFor="let project of projects.slice(0, 3)" class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">📁</span>
+                  <span class="text-sm font-medium text-slate-900">{{ project.name }}</span>
+                </div>
+                <span class="text-xs text-slate-500">{{ getProjectBugCount(project.projectId) }} bugs</span>
+              </div>
+            </div>
+            <div *ngIf="projects.length === 0" class="text-center text-slate-500 py-6">
+              <div class="text-3xl mb-2">📂</div>
+              <p class="text-sm">No projects yet</p>
+              <a routerLink="/projects" class="text-blue-600 hover:text-blue-700 text-xs font-medium mt-2 inline-block">
+                Create a project →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-200 p-6">
+          <h3 class="font-semibold text-slate-900 mb-4">Quick Actions</h3>
+          <div class="space-y-2">
+            <a
+              routerLink="/bugs"
+              [queryParams]="{ action: 'create' }"
+              class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all"
+            >
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <span class="text-sm font-medium text-slate-900">Report New Bug</span>
+            </a>
+            <a
+              routerLink="/projects"
+              class="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all"
+            >
+              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </div>
+              <span class="text-sm font-medium text-slate-900">Create Project</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-6">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-amber-900 mb-2">💡 Pro Tip</h3>
+              <p class="text-sm text-amber-800">
+                Use clear, descriptive titles for your bugs. Include steps to reproduce for faster resolution!
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    
-    <button class="view-all-btn" (click)="navigateToBugs()" *ngIf="bugs.length > 0">
-      View All Bugs →
-    </button>
   </div>
 </div>

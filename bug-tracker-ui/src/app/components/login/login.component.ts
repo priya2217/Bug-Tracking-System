@@ -9,19 +9,30 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
   loginData = {
     usernameOrEmail: '',
     password: '',
   };
+  rememberMe = false;
   errorMessage = '';
+  isLoading = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
-  ) {}
+  ) {
+    // Check if user was remembered
+    const remembered = localStorage.getItem('rememberMe');
+    if (remembered === 'true') {
+      const savedUser = localStorage.getItem('rememberedUser');
+      if (savedUser) {
+        this.loginData.usernameOrEmail = savedUser;
+        this.rememberMe = true;
+      }
+    }
+  }
 
   onSubmit(): void {
     if (!this.loginData.usernameOrEmail || !this.loginData.password) {
@@ -29,15 +40,31 @@ export class LoginComponent {
       return;
     }
 
+    this.errorMessage = '';
+    this.isLoading = true;
+
     this.authService.login(this.loginData).subscribe({
       next: (response) => {
-        console.log('Login successful', response);
+        // Handle remember me
+        if (this.rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+          localStorage.setItem(
+            'rememberedUser',
+            this.loginData.usernameOrEmail,
+          );
+        } else {
+          localStorage.removeItem('rememberMe');
+          localStorage.removeItem('rememberedUser');
+        }
+
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         console.error('Login failed', error);
+        this.isLoading = false;
         this.errorMessage =
-          error.error?.message || 'Invalid username or password';
+          error.error?.message ||
+          'Invalid username or password. Please try again.';
       },
     });
   }

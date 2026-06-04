@@ -1,0 +1,112 @@
+<div class="dashboard-container" *ngIf="!loading; else loadingTemplate">
+
+  <!-- ================= HEADER ================= -->
+  <div class="dashboard-header">
+    <h2>📊 Bug Analytics Dashboard</h2>
+    <button class="refresh-btn" (click)="refresh()">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <!-- ================= SUMMARY CARDS ================= -->
+  <div class="summary-grid">
+
+    <div class="summary-card total">
+      <h3>Total Bugs</h3>
+      <p class="number">{{ analytics.totalBugs }}</p>
+      <small>
+        {{ analytics.totalBugs - analytics.previousTotalBugs >= 0 ? '+' : '' }}
+        {{ analytics.totalBugs - analytics.previousTotalBugs }}
+        from last period
+      </small>
+    </div>
+
+    <div class="summary-card open">
+      <h3>Open</h3>
+      <p class="number">{{ analytics.openBugs }}</p>
+    </div>
+
+    <div class="summary-card progress">
+      <h3>In Progress</h3>
+      <p class="number">{{ analytics.inProgressBugs }}</p>
+    </div>
+
+    <div class="summary-card resolved">
+      <h3>Resolved</h3>
+      <p class="number">{{ analytics.resolvedBugs }}</p>
+      <small>{{ analytics.resolutionRate }}% Resolution Rate</small>
+    </div>
+
+  </div>
+
+  
+
+  <!-- ================= TOP PROJECTS ================= -->
+  <div class="projects-section">
+    <h3>🏆 Top Projects</h3>
+
+    <table *ngIf="topProjects.length > 0">
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Bugs</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let project of topProjects">
+          <td>{{ project.name }}</td>
+          <td>{{ project.bugCount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="topProjects.length === 0">No project data available.</p>
+  </div>
+
+  <!-- ================= TOP CONTRIBUTORS ================= -->
+  <div class="contributors-section">
+    <h3>👩‍💻 Top Contributors</h3>
+
+    <table *ngIf="topContributors.length > 0">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Bugs Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of topContributors">
+          <td>{{ user.name }}</td>
+          <td>{{ user.bugCount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="topContributors.length === 0">
+      No contributor data available.
+    </p>
+  </div>
+
+  <!-- ================= INSIGHTS ================= -->
+  <div class="insights-section">
+    <h3>💡 Insights</h3>
+
+    <ul *ngIf="insights.length > 0">
+      <li *ngFor="let insight of insights">
+        {{ insight }}
+      </li>
+    </ul>
+
+    <p *ngIf="insights.length === 0">
+      No insights generated yet.
+    </p>
+  </div>
+
+</div>
+
+<!-- ================= LOADING TEMPLATE ================= -->
+<ng-template #loadingTemplate>
+  <div class="loading">
+    <p>Loading analytics...</p>
+  </div>
+</ng-template>

@@ -1,31 +1,61 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Bug, BugSummary } from '../models/bug.models';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Bug } from '../models/bug.models';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class BugService {
   private apiUrl = 'http://localhost:5245/api/bug';
 
   constructor(private http: HttpClient) {}
 
-  // Fetch all bugs from backend
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    });
+  }
+
   getAllBugs(): Observable<Bug[]> {
-    return this.http.get<Bug[]>(this.apiUrl);
+    return this.http.get<Bug[]>(this.apiUrl, { headers: this.getHeaders() });
   }
 
-  // Get bug summary statistics
-  getBugSummary(): Observable<BugSummary> {
-    return this.http.get<BugSummary>(`${this.apiUrl}/summary`);
+  getBugById(id: number): Observable<Bug> {
+    return this.http.get<Bug>(`${this.apiUrl}/${id}`, {
+      headers: this.getHeaders(),
+    });
   }
 
-  // Create a new bug
   createBug(bug: Bug): Observable<Bug> {
-    return this.http.post<Bug>(this.apiUrl, bug);
+    return this.http.post<Bug>(this.apiUrl, bug, {
+      headers: this.getHeaders(),
+    });
   }
 
-  // Delete a bug by ID
-  deleteBug(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  updateBug(id: number, bug: Bug): Observable<Bug> {
+    return this.http.put<Bug>(`${this.apiUrl}/${id}`, bug, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  deleteBug(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getBugsByProject(projectId: number): Observable<Bug[]> {
+    return this.http.get<Bug[]>(`${this.apiUrl}/project/${projectId}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getBugsByStatus(status: string): Observable<Bug[]> {
+    return this.http.get<Bug[]>(`${this.apiUrl}/status/${status}`, {
+      headers: this.getHeaders(),
+    });
   }
 }

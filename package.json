@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@angular/cdk": "^21.2.10",
+    "chart.js": "^4.5.1"
+  }
+}

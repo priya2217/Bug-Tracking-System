@@ -1,50 +1,147 @@
-<div class="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow">
-  <h2 class="text-2xl font-bold mb-4">Projects</h2>
-
-  <div class="mb-4">
-    <label class="block text-sm font-semibold text-gray-700 mb-2"
-      >New Project</label
-    >
-    <div class="flex gap-2">
-      <input
-        [(ngModel)]="newName"
-        placeholder="Project name"
-        class="flex-1 px-3 py-2 border rounded"
-      />
-      <button
-        (click)="createProject()"
-        [disabled]="creating"
-        class="bg-indigo-600 text-white px-4 py-2 rounded"
-      >
-        {{ creating ? "Creating..." : "Create" }}
-      </button>
+<div class="min-h-screen bg-slate-50">
+  <!-- Header -->
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <span class="text-3xl">📁</span>
+            My Projects
+          </h1>
+          <p class="text-sm text-slate-600 mt-1">Organize your work into projects</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="projects.length === 0" class="text-gray-600">
-    No projects found. Create a local project to get started.
-  </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Create Project Card -->
+    <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8 shadow-sm">
+      <h2 class="text-lg font-semibold text-slate-900 mb-4">Create New Project</h2>
+      <form (ngSubmit)="createProject()" class="space-y-4">
+        <div class="flex gap-3">
+          <input
+            type="text"
+            [(ngModel)]="newName"
+            name="projectName"
+            placeholder="Enter project name (e.g., Mobile App, Web Dashboard)"
+            class="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            required
+          />
+          <button
+            type="submit"
+            [disabled]="creating || !newName.trim()"
+            class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium px-6 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+          >
+            {{ creating ? '⏳ Creating...' : '+ Create' }}
+          </button>
+        </div>
+        <p class="text-xs text-slate-500">
+          💡 Tip: Projects help you organize bugs by different applications or features
+        </p>
+      </form>
+    </div>
 
-  <ul *ngIf="projects.length > 0" class="space-y-3">
-    <li
-      *ngFor="let p of projects"
-      class="flex items-center justify-between p-3 border rounded"
-    >
-      <div>
-        <div class="font-semibold">{{ p.name }}</div>
-        <div class="text-sm text-gray-500">ID: {{ p.projectId }}</div>
+    <!-- Projects Grid -->
+    <div *ngIf="projects.length === 0" class="text-center py-20 bg-white rounded-xl border border-slate-200">
+      <div class="text-6xl mb-4">📂</div>
+      <h3 class="text-xl font-semibold text-slate-900 mb-2">No projects yet</h3>
+      <p class="text-slate-600 mb-6">Create your first project to get started</p>
+    </div>
+
+    <div *ngIf="projects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngFor="let project of projects"
+        class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
+      >
+        <div class="p-6">
+          <!-- Project Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ project.name }}</h3>
+              <p class="text-sm text-slate-500">Project #{{ project.projectId }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl">📁</span>
+            </div>
+          </div>
+
+          <!-- Project Description -->
+          <p *ngIf="project.description" class="text-sm text-slate-600 mb-4">
+            {{ project.description }}
+          </p>
+
+          <!-- Project Stats -->
+          <div class="grid grid-cols-3 gap-2 mb-4 pt-4 border-t border-slate-200">
+            <div class="text-center">
+              <div class="text-lg font-bold text-slate-900">{{ getProjectBugCount(project.projectId) }}</div>
+              <div class="text-xs text-slate-500">Bugs</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-red-600">{{ getProjectOpenBugs(project.projectId) }}</div>
+              <div class="text-xs text-slate-500">Open</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-green-600">{{ getProjectResolvedBugs(project.projectId) }}</div>
+              <div class="text-xs text-slate-500">Resolved</div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <a
+              [routerLink]="['/bugs']"
+              [queryParams]="{ projectId: project.projectId }"
+              class="flex-1 text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+            >
+              View Bugs
+            </a>
+            <button
+              (click)="deleteProject(project.projectId)"
+              class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+              title="Delete project"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Project Color Bar -->
+        <div class="h-2 bg-gradient-to-r from-blue-400 to-purple-400"></div>
       </div>
-      <div class="flex items-center gap-2">
-        <a
-          [routerLink]="['/bugs']"
-          [queryParams]="{ projectId: p.projectId }"
-          class="text-indigo-600 underline"
-          >View Bugs</a
-        >
-        <button (click)="deleteProject(p.projectId)" class="text-red-600">
-          Delete
-        </button>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-blue-900 mb-2">What are projects?</h3>
+          <p class="text-sm text-blue-800 mb-2">
+            Projects help you organize bugs by different applications, features, or work streams. Each bug must belong to a project.
+          </p>
+          <ul class="text-sm text-blue-700 space-y-1">
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Create separate projects for different apps or modules</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Track bugs independently for each project</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Filter and view bugs by project on the Bugs page</span>
+            </li>
+          </ul>
+        </div>
       </div>
-    </li>
-  </ul>
+    </div>
+  </div>
 </div>
